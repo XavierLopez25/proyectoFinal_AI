@@ -10,6 +10,7 @@ from langchain_experimental.agents.agent_toolkits import create_csv_agent
 
 load_dotenv()
 
+
 def main():
     print("Start...")
     instructions = """You are an agent designed to write and execute python code to answer questions.
@@ -33,9 +34,30 @@ def main():
 
     python_agent_executor = AgentExecutor(agent=python_agent, tools=tools, verbose=True)
 
-    csv_agent_executor: AgentExecutor = create_csv_agent(
+    osu_beatmap_agent_executor: AgentExecutor = create_csv_agent(
         llm=ChatOpenAI(temperature=0, model="gpt-4"),
-        path="episode_info.csv",
+        path="CSV/osu_beatmap_info.csv",
+        verbose=True,
+        allow_dangerous_code=True,
+    )
+
+    super_mario_64_120_stars_speedrun_agent_executor: AgentExecutor = create_csv_agent(
+        llm=ChatOpenAI(temperature=0, model="gpt-4"),
+        path="CSV/super_mario_64_120_stars_speedrun_data.csv",
+        verbose=True,
+        allow_dangerous_code=True,
+    )
+
+    steam_games_agent_executor: AgentExecutor = create_csv_agent(
+        llm=ChatOpenAI(temperature=0, model="gpt-4"),
+        path="CSV/steam_games.csv",
+        verbose=True,
+        allow_dangerous_code=True,
+    )
+
+    warframe_weapons_agent_executor: AgentExecutor = create_csv_agent(
+        llm=ChatOpenAI(temperature=0, model="gpt-4"),
+        path="CSV/warframe_weapons.csv",
         verbose=True,
         allow_dangerous_code=True,
     )
@@ -44,8 +66,31 @@ def main():
         return python_agent_executor.invoke({"input": original_prompt})
 
     tools = [
-        Tool(name="Python Agent", func=python_agent_executor_wrapper, description="""Useful when you need to transform natural language to python and execute the python code, returning the results of the code execution DOES NOT ACCEPT CODE AS INPUT"""),
-        Tool(name="CSV Agent",  func=csv_agent_executor.invoke, description="""Useful when you need to answer questions over episode_info.csv, takes an input the entire question and returns the answer after running pandas calculations"""),
+        Tool(name="Python Agent", func=python_agent_executor_wrapper,
+             description="""Useful when you need to transform natural language to python and execute the python code,
+              returning the results of the code execution DOES NOT ACCEPT CODE AS INPUT"""),
+        Tool(name="OSU Beatmap Info Agent", func=osu_beatmap_agent_executor.invoke,
+             description="""Useful when you need to answer questions over osu_beatmap_info.csv, specifically questions about OSU beatmaps and questions about 
+             Title, Artist, Mapper, Creation Date, Ranked Date, Map Status, Nominator, Genre, Language, Playcount, Likes, Length, BPM, Circle Count, Slider Count,
+             Circle Size, HP Drain, Accuracy, Approach Rate, Star Rating, Game Mode, Difficulties, URL of a OSU beatmap, for example: Which is the map with the most
+             BPM? Takes an input the entire question and returns the answer after running pandas calculations"""),
+        Tool(name="Super Mario 64 - 120 Stars Speedruns Info Agent", func=super_mario_64_120_stars_speedrun_agent_executor.invoke,
+             description="""Useful when you need to answer questions over super_mario_64_120_stars_speedrun_data.csv, specifically questions about Super Mario 64 Speedruns to get 120 stars,
+              information about the id, place, speedrun link, submitted date, primary time seconds, real time seconds, player id, player name, player country, platform,
+              verified of a speedrun, for example: What is the country of the player which has the best time for a speedrun? Takes an input the entire question and returns the answer after running pandas calculations"""),
+        Tool(name="Steam Games Info Agent", func=steam_games_agent_executor.invoke,
+             description="""This tool is designed to answer queries related to data in the steam_games.csv file. It can handle questions regarding various attributes of Steam games including the game's name,
+              developer, publisher, positive and negative ratings, playtime, price, and more. For example, you can ask,
+               'Who is the developer of Portal 2?' or 'How many positive ratings does Team Fortress Classic have?' This tool parses natural language questions and maps
+                them to the corresponding data fields in the CSV to retrieve accurate information. Takes an input the entire question and returns the answer after running pandas calculations"""),
+        Tool(name="Warframe Weapons Info Agent", func=warframe_weapons_agent_executor.invoke,
+             description="""Useful when you need to answer questions over warframe_weapons.csv for Warframe weapons, specifically questions about Warframe weapons,
+             things like Name, Trigger, AttackName, Impact, Puncture, Slash, Cold, Electricity, Heat, Toxin, Blast, Corrosive, Gas, Magnetic, Radiation, Viral, 
+             Void, BaseDamage, BaseDps, TotalDamage, CritChance, CritMultiplier, AvgShotDmg, BurstDps, SustainedDps, LifetimeDmg, StatusChance, ForcedProcs, 
+             AvgProcCount, AvgProcPerSec, Multishot, FireRate, ChargeTime, Disposition, Mastery, Magazine, AmmoPickup, AmmoMax, Reload, ShotType, ShotSpeed,
+             PunchThrough, Accuracy, Introduced, IntroducedDate, Slot, Class, AmmoType, Range, InternalName, Family, FalloffStart, FalloffEnd, FalloffReduction
+             of a weapon, for example: What damage types (Impact, Puncture, Slash, Cold, Electricity, Heat, Toxin, Blast, Corrosive, Gas, Magnetic,
+             Radiation, Viral, Void) has the Trumna? Takes an input the entire question and returns the answer after running pandas calculations"""),
     ]
 
     prompt = base_prompt.partial(instructions="")
@@ -63,24 +108,11 @@ def main():
 
     # Caso para CSV Agent
     print(
-         grand_agent_executor.invoke(
-             {
-                 "input": "which season has the most episodes?"
-             }
-         )
-     )
-
-    # Caso para Python Code Agent
-    # print(
-    #     grand_agent_executor.invoke(
-    #         {
-    #             "input": "Generate and save in current working directory 5 qrcodes that points to www.google.com, name them as QR_CODE_PYTHON_AGENT_1, QR_CODE_PYTHON_AGENT_2, etc.",
-    #         }
-    #     )
-    # )
-
+        grand_agent_executor.invoke(
+            {
+                "input": "What is the name and the country of the person with the fastest Super Mario 64 120 stars speedrun?"
+            }
+        )
+    )
 if __name__ == "__main__":
     main()
-
-
-
